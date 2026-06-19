@@ -20,8 +20,9 @@ export default function Header() {
     <header
       className={cn(
         'sticky top-0 z-40 w-full',
-        'glass-card border-b border-white/40'
+        'glass-card'
       )}
+      style={{ borderBottom: '1px solid var(--glass-border)' }}
     >
       <div className="container flex h-20 items-center justify-between gap-4">
         <div className="flex items-center gap-3">
@@ -34,25 +35,24 @@ export default function Header() {
         </div>
 
         <div className="relative hidden md:block">
-          <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+          <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-on-glass" />
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="搜索事件、日期..."
-            className="w-[400px] max-w-full rounded-full bg-white/60 px-5 py-2.5 pl-11 text-sm text-gray-700 placeholder-gray-400 outline-none transition-all focus:bg-white focus:shadow-soft"
+            className="w-[400px] max-w-full rounded-full glass-input px-5 py-2.5 pl-11 text-sm outline-none transition-all focus:shadow-soft"
           />
         </div>
 
         <div className="flex items-center gap-3">
-          <div className="flex items-center gap-1 rounded-2xl bg-white/50 p-1">
+          <div className="glass-btn-group flex items-center gap-1 rounded-2xl p-1">
             <button
               onClick={() => setActiveView('grid')}
               className={cn(
                 'flex h-9 w-9 items-center justify-center rounded-xl transition-all',
-                activeView === 'grid'
-                  ? 'bg-gradient-primary text-white shadow-soft'
-                  : 'text-gray-500 hover:bg-white/60 hover:text-gray-700'
+                activeView === 'grid' &&
+                  'bg-gradient-primary text-white shadow-soft'
               )}
               title="网格视图"
             >
@@ -62,9 +62,8 @@ export default function Header() {
               onClick={() => setActiveView('widget')}
               className={cn(
                 'flex h-9 w-9 items-center justify-center rounded-xl transition-all',
-                activeView === 'widget'
-                  ? 'bg-gradient-primary text-white shadow-soft'
-                  : 'text-gray-500 hover:bg-white/60 hover:text-gray-700'
+                activeView === 'widget' &&
+                  'bg-gradient-primary text-white shadow-soft'
               )}
               title="Widget 视图"
             >
@@ -74,7 +73,7 @@ export default function Header() {
 
           <button
             onClick={toggleMode}
-            className="flex h-9 w-9 items-center justify-center rounded-2xl bg-white/50 text-gray-600 transition-all hover:bg-white/70 hover:text-gray-800"
+            className="glass-icon-btn flex h-9 w-9 items-center justify-center rounded-2xl transition-all"
             title={mode === 'light' ? '切换到深色模式' : '切换到浅色模式'}
           >
             {mode === 'light' ? (
@@ -96,13 +95,13 @@ export default function Header() {
 
       <div className="flex items-center justify-center pb-4 md:hidden">
         <div className="relative w-full max-w-sm">
-          <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+          <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-on-glass" />
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="搜索事件、日期..."
-            className="w-full rounded-full bg-white/60 px-5 py-2.5 pl-11 text-sm text-gray-700 placeholder-gray-400 outline-none transition-all focus:bg-white focus:shadow-soft"
+            className="w-full rounded-full glass-input px-5 py-2.5 pl-11 text-sm outline-none transition-all focus:shadow-soft"
           />
         </div>
       </div>

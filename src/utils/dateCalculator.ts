@@ -1,7 +1,7 @@
 import { format, differenceInDays, parseISO, startOfDay } from 'date-fns';
 import type { CountdownEvent, DateType, LunarDate, RepeatType } from '../types/event';
 import { calculateNextOccurrence, isAfter, addYears, addMonths, addWeeks, addDays } from './repeatEngine';
-import { getLunarDateDisplay } from './lunarConverter';
+import { solarToLunar, getLunarDateDisplay } from './lunarConverter';
 
 export function getTodayISO(): string {
   return format(startOfDay(new Date()), 'yyyy-MM-dd');
@@ -14,10 +14,15 @@ export function getDaysBetween(dateStr1: string, dateStr2: string): number {
 export function formatDateDisplay(
   dateStr: string,
   dateType: DateType,
-  lunarDate?: LunarDate
+  _lunarDate?: LunarDate
 ): string {
-  if (dateType === 'lunar' && lunarDate) {
-    return getLunarDateDisplay(lunarDate);
+  if (dateType === 'lunar') {
+    try {
+      const actualLunar = solarToLunar(parseISO(dateStr));
+      if (actualLunar) return getLunarDateDisplay(actualLunar);
+    } catch {
+      // fall through to solar display
+    }
   }
   const d = parseISO(dateStr);
   return format(d, 'yyyy年MM月dd日');

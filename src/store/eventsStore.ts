@@ -87,7 +87,7 @@ export const useEventsStore = create<EventsState>()(
     {
       name: 'countdown-events-v1',
       onRehydrateStorage: () => (state) => {
-        if (state) state.hydrated = true;
+        if (state) state.hydrated = state.events.length > 0;
       },
     }
   )
