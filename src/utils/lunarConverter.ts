@@ -1,6 +1,6 @@
 import type { LunarDate } from '../types/event';
 
-const lunarInfo: number[] = [
+export const lunarInfo: number[] = [
   0x04bd8, 0x04ae0, 0x0a570, 0x054d5, 0x0d260, 0x0d950, 0x16554, 0x056a0, 0x09ad0, 0x055d2,
   0x04ae0, 0x0a5b6, 0x0a4d0, 0x0d250, 0x1d255, 0x0b540, 0x0d6a0, 0x0ada2, 0x095b0, 0x14977,
   0x04970, 0x0a4b0, 0x0b4b5, 0x06a50, 0x06d40, 0x1ab54, 0x02b60, 0x09570, 0x052f2, 0x04970,
@@ -181,4 +181,18 @@ export function getLunarDateDisplay(lunar: LunarDate): string {
   const mn = lunar.monthName || monthName(lunar.month, lunar.isLeapMonth);
   const dn = lunar.dayName || dayName(lunar.day);
   return `${gz}年${mn}${dn}`;
+}
+
+export const GAN = Gan;
+export const ZHI = Zhi;
+
+export const LUNAR_MONTH_NAMES = [
+  '正月', '二月', '三月', '四月', '五月', '六月',
+  '七月', '八月', '九月', '十月', '冬月', '腊月',
+];
+
+export const LUNAR_DAY_NAMES = lunarDayNames;
+
+export function getYearGanZhi(year: number): string {
+  return ganZhi(year);
 }
