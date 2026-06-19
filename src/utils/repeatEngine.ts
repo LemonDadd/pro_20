@@ -5,7 +5,7 @@ import {
   addDays as addDaysFns,
   parseISO,
   isAfter as isAfterFns,
-  isSameMonth as isSameMonthFns,
+  isSameDay as isSameDayFns,
   getDate,
   lastDayOfMonth,
 } from 'date-fns';
@@ -52,14 +52,14 @@ export function addDays(dateStr: string, days: number): string {
   return toISO(result);
 }
 
-export function isSameMonthDay(date1: string, date2: string): boolean {
-  const d1 = parseISO(date1);
-  const d2 = parseISO(date2);
-  return isSameMonthFns(d1, d2) && getDate(d1) === getDate(d2);
-}
-
 export function isAfter(date1: string, date2: string): boolean {
   return isAfterFns(parseISO(date1), parseISO(date2));
+}
+
+export function isAfterOrSame(date1: string, date2: string): boolean {
+  const d1 = parseISO(date1);
+  const d2 = parseISO(date2);
+  return isAfterFns(d1, d2) || isSameDayFns(d1, d2);
 }
 
 function solarNext(
@@ -72,7 +72,7 @@ function solarNext(
   const maxAttempts = 1000;
   let attempts = 0;
 
-  while (!isAfter(current, todayISO) && attempts < maxAttempts) {
+  while (!isAfterOrSame(current, todayISO) && attempts < maxAttempts) {
     switch (repeatType) {
       case 'weekly':
         current = addWeeks(current, customInterval);

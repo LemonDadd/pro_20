@@ -1,5 +1,7 @@
 import { motion } from 'framer-motion';
-import { Bell, Calendar, RefreshCw } from 'lucide-react';
+import { Bell, Calendar, RefreshCw, Pencil, Pin, PinOff, Share2, Trash2 } from 'lucide-react';
+import { useEventsStore } from '@/store/eventsStore';
+import { useUIStore } from '@/store/uiStore';
 import { getCategoryById } from '@/utils/categoryPresets';
 import { formatDateDisplay } from '@/utils/dateCalculator';
 import { cn } from '@/lib/utils';
@@ -10,6 +12,8 @@ interface WidgetCardProps {
 }
 
 export default function WidgetCard({ event }: WidgetCardProps) {
+  const { togglePin, deleteEvent } = useEventsStore();
+  const { openEditModal, openShareModal } = useUIStore();
   const category = getCategoryById(event.categoryId);
 
   const isToday = event.daysRemaining === 0;
@@ -34,6 +38,28 @@ export default function WidgetCard({ event }: WidgetCardProps) {
     background: `linear-gradient(135deg, ${category.gradient[0]} 0%, ${category.gradient[1]} 100%)`,
   };
 
+  const handleEdit = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    openEditModal(event.id);
+  };
+
+  const handleShare = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    openShareModal(event.id);
+  };
+
+  const handlePin = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    togglePin(event.id);
+  };
+
+  const handleDelete = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (window.confirm(`确定要删除「${event.title}」吗？`)) {
+      deleteEvent(event.id);
+    }
+  };
+
   return (
     <motion.div
       initial={{ scale: 0.95, opacity: 0 }}
@@ -48,15 +74,60 @@ export default function WidgetCard({ event }: WidgetCardProps) {
       >
         <div className="w-full h-full rounded-[40px] glass-card p-10 flex flex-col">
           <div className="flex items-start justify-between mb-8">
-            <div className="text-[7rem] leading-none animate-float">{event.icon}</div>
-            <div
-              className="px-4 py-1.5 rounded-full text-sm font-medium"
-              style={{
-                background: `linear-gradient(135deg, ${category.gradient[0]}20 0%, ${category.gradient[1]}20 100%)`,
-                color: category.color,
-              }}
-            >
-              {category.name}
+            <div className="flex items-start gap-5">
+              <div className="text-[7rem] leading-none animate-float">{event.icon}</div>
+              <div className="flex flex-col gap-2">
+                <div
+                  className="px-4 py-1.5 rounded-full text-sm font-medium"
+                  style={{
+                    background: `linear-gradient(135deg, ${category.gradient[0]}20 0%, ${category.gradient[1]}20 100%)`,
+                    color: category.color,
+                  }}
+                >
+                  {category.name}
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    onClick={handleEdit}
+                    className={cn(
+                      'h-9 w-9 rounded-xl bg-gray-50 flex items-center justify-center text-gray-600 transition-colors hover:bg-gray-100 hover:text-gray-800'
+                    )}
+                    title="编辑"
+                  >
+                    <Pencil className="w-4 h-4" />
+                  </button>
+                  <button
+                    onClick={handleShare}
+                    className="h-9 w-9 rounded-xl bg-gray-50 flex items-center justify-center text-gray-600 transition-colors hover:bg-gray-100 hover:text-gray-800"
+                    title="分享"
+                  >
+                    <Share2 className="w-4 h-4" />
+                  </button>
+                  <button
+                    onClick={handlePin}
+                    className={cn(
+                      'h-9 w-9 rounded-xl flex items-center justify-center transition-colors',
+                      event.isPinned
+                        ? 'bg-primary-50 text-primary-600 hover:bg-primary-100'
+                        : 'bg-gray-50 text-gray-600 hover:bg-gray-100'
+                    )}
+                    title={event.isPinned ? '取消置顶' : '置顶'}
+                  >
+                    {event.isPinned ? (
+                      <Pin className="w-4 h-4 fill-current" />
+                    ) : (
+                      <PinOff className="w-4 h-4" />
+                    )}
+                  </button>
+                  <button
+                    onClick={handleDelete}
+                    className="h-9 w-9 rounded-xl bg-red-50 flex items-center justify-center text-red-500 transition-colors hover:bg-red-100 hover:text-red-700"
+                    title="删除"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
 

@@ -74,29 +74,29 @@ export default function WidgetMode() {
     <div className="fixed inset-0 z-50 overflow-hidden">
       <div className="absolute inset-0">
         <div
-          className="absolute inset-0 bg-cover bg-center blur-3xl scale-110"
-          style={{
-            backgroundImage:
-              'linear-gradient(135deg, #FFFBF5 0%, #FFF0E6 50%, #FFE5D4 100%)',
-          }}
+          className="absolute inset-0 bg-cover bg-center blur-3xl scale-110 widget-bg"
         />
-        <div className="absolute inset-0 bg-black/40" />
+        <div className="absolute inset-0 widget-overlay" />
       </div>
 
       <div className="absolute top-0 left-0 right-0 p-6 flex justify-between items-start z-10">
-        <div className="text-white">
-          <div className="text-6xl font-mono font-bold tracking-tight drop-shadow-lg">
+        <div>
+          <div className="text-6xl font-mono font-bold tracking-tight drop-shadow-lg" style={{ color: 'var(--widget-ctrl-fg)' }}>
             {timeStr}
           </div>
-          <div className="text-xl text-white/80 mt-2 drop-shadow">
+          <div className="text-xl mt-2 drop-shadow" style={{ color: 'color-mix(in srgb, var(--widget-ctrl-fg) 80%, transparent)' }}>
             {dateStr}
+          </div>
+          <div className="mt-3 text-sm drop-shadow flex items-center gap-1.5" style={{ color: 'color-mix(in srgb, var(--widget-ctrl-fg) 60%, transparent)' }}>
+            <kbd className="px-2 py-0.5 rounded text-xs border border-white/20 widget-ctrl">ESC</kbd>
+            <span>退出全屏</span>
           </div>
         </div>
         <motion.button
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
           onClick={handleClose}
-          className="w-12 h-12 rounded-full bg-white/15 backdrop-blur-md border border-white/20 flex items-center justify-center text-white hover:bg-white/25 transition-colors"
+          className="w-12 h-12 rounded-full widget-ctrl flex items-center justify-center transition-colors"
         >
           <X className="w-6 h-6" />
         </motion.button>
@@ -108,7 +108,7 @@ export default function WidgetMode() {
             whileHover={{ scale: 1.08, x: -4 }}
             whileTap={{ scale: 0.95 }}
             onClick={goToPrev}
-            className="absolute left-8 z-10 w-16 h-16 rounded-full bg-white/15 backdrop-blur-md border border-white/20 flex items-center justify-center text-white hover:bg-white/25 transition-colors"
+            className="absolute left-8 z-10 w-16 h-16 rounded-full widget-ctrl flex items-center justify-center transition-colors"
           >
             <ChevronLeft className="w-8 h-8" />
           </motion.button>
@@ -133,7 +133,7 @@ export default function WidgetMode() {
             whileHover={{ scale: 1.08, x: 4 }}
             whileTap={{ scale: 0.95 }}
             onClick={goToNext}
-            className="absolute right-8 z-10 w-16 h-16 rounded-full bg-white/15 backdrop-blur-md border border-white/20 flex items-center justify-center text-white hover:bg-white/25 transition-colors"
+            className="absolute right-8 z-10 w-16 h-16 rounded-full widget-ctrl flex items-center justify-center transition-colors"
           >
             <ChevronRight className="w-8 h-8" />
           </motion.button>
@@ -149,10 +149,10 @@ export default function WidgetMode() {
               whileTap={{ scale: 0.9 }}
               onClick={() => setCurrentIndex(index)}
               className={cn(
-                'rounded-full transition-all duration-300',
+                'rounded-full transition-all duration-300 shadow-lg',
                 index === currentIndex
-                  ? 'w-8 h-3 bg-white shadow-lg'
-                  : 'w-3 h-3 bg-white/40 hover:bg-white/60'
+                  ? 'w-8 h-3 widget-indicator-active'
+                  : 'w-3 h-3 widget-indicator-inactive'
               )}
             />
           ))}
