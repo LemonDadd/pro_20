@@ -10,6 +10,7 @@ import { useEventsStore } from '@/store/eventsStore';
 import { useUIStore } from '@/store/uiStore';
 import { getCategoryById } from '@/utils/categoryPresets';
 import { formatDateDisplay } from '@/utils/dateCalculator';
+import { computeEventStatus } from '@/utils/eventStatus';
 import { cn } from '@/lib/utils';
 import type { CountdownEvent } from '@/types/event';
 
@@ -29,13 +30,9 @@ export default function EventCard({ event, index = 0 }: EventCardProps) {
   const { openEditModal, openShareModal } = useUIStore();
 
   const category = getCategoryById(event.categoryId);
+  const status = computeEventStatus(event.daysRemaining, event.isPast);
 
-  const isToday = event.daysRemaining === 0;
-  const isFuture = event.daysRemaining > 0;
-  const isPast = event.isPast || event.daysRemaining < 0;
-
-  const statusLabel = isToday ? '今天' : isFuture ? '还剩' : '已过';
-  const displayDays = Math.abs(event.daysRemaining);
+  const { isToday, isFuture, isPast, statusLabel, displayDays } = status;
 
   const handleCardClick = () => {
     openEditModal(event.id);

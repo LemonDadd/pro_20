@@ -1,6 +1,7 @@
 import { forwardRef } from 'react';
 import { formatDateDisplay } from '@/utils/dateCalculator';
-import type { CountdownEventWithMetrics } from '../events/EventCard';
+import { computeEventStatus } from '@/utils/eventStatus';
+import type { CountdownEventWithMetrics } from '@/components/events/EventCard';
 import type { ShareTemplateId, ShareSize } from '@/types/share';
 
 interface ShareCardPreviewProps {
@@ -17,11 +18,14 @@ const aspectRatioMap: Record<ShareSize, string> = {
 
 export const ShareCardPreview = forwardRef<HTMLDivElement, ShareCardPreviewProps>(
   function ShareCardPreview({ event, templateId, size = 'social' }, ref) {
-    const isToday = event.daysRemaining === 0;
-    const isFuture = event.daysRemaining > 0;
-    const isPast = event.isPast || event.daysRemaining < 0;
-    const statusText = isToday ? '今天' : isFuture ? '还剩' : '已过';
-    const displayDays = Math.abs(event.daysRemaining);
+    const {
+      isToday,
+      isFuture,
+      isPast,
+      statusLabel,
+      displayDays,
+    } = computeEventStatus(event.daysRemaining, event.isPast);
+    const statusText = statusLabel;
 
     const dateDisplay = formatDateDisplay(
       event.nextOccurrence,

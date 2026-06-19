@@ -1,23 +1,16 @@
 import { useEffect, useState, useCallback } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import {
-  Calendar,
   Repeat,
   Bell,
   Settings,
   Info,
   Pin,
-  AlertCircle,
   Trash2,
-  Globe,
-  MessageSquare,
-  Sparkles,
 } from 'lucide-react';
 import { useUIStore } from '@/store/uiStore';
 import { useEventsStore } from '@/store/eventsStore';
-import { CATEGORY_PRESETS } from '@/utils/categoryPresets';
-import { lunarToSolar, solarToLunar } from '@/utils/lunarConverter';
-import { cn } from '@/lib/utils';
+import { solarToLunar } from '@/utils/lunarConverter';
 import type {
   CountdownEvent,
   DateType,
@@ -26,33 +19,14 @@ import type {
   RepeatType,
 } from '@/types/event';
 import Modal from '@/components/common/Modal';
-import Input from '@/components/common/Input';
 import Button from '@/components/common/Button';
 import Toggle from '@/components/common/Toggle';
-import DatePicker from './DatePicker';
+import EventBasicFields from './EventBasicFields';
+import EventCategoryPicker from './EventCategoryPicker';
+import EventRepeatConfig from './EventRepeatConfig';
+import EventReminderConfig from './EventReminderConfig';
 
-const EMOJI_PRESETS = [
-  '🎂', '💝', '📚', '✈️', '💰', '⏰', '🎄', '🏮', '🎉', '🎓',
-  '💍', '🏆', '🎵', '🎨', '🍰', '🏖️', '🎁', '🎯', '💡', '⭐',
-];
-
-const REMINDER_DAY_OPTIONS = [
-  { label: '事件当天', days: 0 },
-  { label: '提前1天', days: 1 },
-  { label: '提前3天', days: 3 },
-  { label: '提前7天', days: 7 },
-  { label: '提前30天', days: 30 },
-];
-
-const REPEAT_OPTIONS: { label: string; value: RepeatType }[] = [
-  { label: '不重复', value: 'none' },
-  { label: '每年', value: 'yearly' },
-  { label: '每月', value: 'monthly' },
-  { label: '每周', value: 'weekly' },
-  { label: '自定义', value: 'custom' },
-];
-
-interface FormState {
+export interface FormState {
   title: string;
   icon: string;
   categoryId: string;
@@ -65,6 +39,11 @@ interface FormState {
   reminder: ReminderSetting;
   isPinned: boolean;
   customDaysInput: string;
+}
+
+export interface FormErrors {
+  title?: string;
+  date?: string;
 }
 
 function getDefaultFormState(): FormState {
@@ -94,26 +73,12 @@ function getDefaultFormState(): FormState {
   };
 }
 
-interface FormErrors {
-  title?: string;
-  date?: string;
-}
-
 export default function EventModal() {
   const { isEventModalOpen, editingEventId, closeEventModal } = useUIStore();
   const { addEvent, updateEvent, deleteEvent, getEventById } = useEventsStore();
 
   const [form, setForm] = useState<FormState>(getDefaultFormState());
   const [errors, setErrors] = useState<FormErrors>({});
-  const [browserNotifySupported, setBrowserNotifySupported] = useState(true);
-
-  useEffect(() => {
-    if (typeof Notification !== 'undefined') {
-      setBrowserNotifySupported(true);
-    } else {
-      setBrowserNotifySupported(false);
-    }
-  }, []);
 
   const isEditing = editingEventId != null;
 
@@ -152,81 +117,6 @@ export default function EventModal() {
   const updateForm = useCallback(<K extends keyof FormState>(key: K, value: FormState[K]) => {
     setForm((prev) => ({ ...prev, [key]: value }));
   }, []);
-
-  const updateReminder = useCallback(<K extends keyof ReminderSetting>(key: K, value: ReminderSetting[K]) => {
-    setForm((prev) => ({
-      ...prev,
-      reminder: { ...prev.reminder, [key]: value },
-    }));
-  }, []);
-
-  const handleSolarChange = useCallback((date: string) => {
-    updateForm('solarDate', date);
-    if (date) {
-      const d = new Date(date);
-      if (!isNaN(d.getTime())) {
-        updateForm('lunarDate', solarToLunar(d));
-      }
-    }
-  }, [updateForm]);
-
-  const handleLunarChange = useCallback((lunar: LunarDate) => {
-    updateForm('lunarDate', lunar);
-    try {
-      const solar = lunarToSolar(lunar.year, lunar.month, lunar.day, lunar.isLeapMonth);
-      updateForm('solarDate', solar.toISOString().split('T')[0]);
-    } catch {
-      // ignore
-    }
-  }, [updateForm]);
-
-  const handleDateTypeChange = useCallback((type: DateType) => {
-    updateForm('dateType', type);
-  }, [updateForm]);
-
-  const toggleReminderDay = useCallback((days: number) => {
-    if (days === 0) {
-      updateReminder('onEventDay', !form.reminder.onEventDay);
-    } else {
-      setForm((prev) => {
-        const has = prev.reminder.daysBefore.includes(days);
-        return {
-          ...prev,
-          reminder: {
-            ...prev.reminder,
-            daysBefore: has
-              ? prev.reminder.daysBefore.filter((d) => d !== days)
-              : [...prev.reminder.daysBefore, days],
-          },
-        };
-      });
-    }
-  }, [form.reminder.onEventDay, updateReminder]);
-
-  const handleCustomDaysAdd = useCallback(() => {
-    const val = parseInt(form.customDaysInput, 10);
-    if (!isNaN(val) && val > 0 && !form.reminder.daysBefore.includes(val)) {
-      setForm((prev) => ({
-        ...prev,
-        reminder: {
-          ...prev.reminder,
-          daysBefore: [...prev.reminder.daysBefore, val].sort((a, b) => a - b),
-          customDays: val,
-        },
-        customDaysInput: '',
-      }));
-    }
-  }, [form.customDaysInput, form.reminder.daysBefore]);
-
-  const requestBrowserPermission = useCallback(async () => {
-    if (typeof Notification === 'undefined') return;
-    if (Notification.permission === 'granted') {
-      updateReminder('browserNotify', true);
-    } else if (Notification.permission !== 'denied') {
-      const result = await Notification.requestPermission();
-      updateReminder('browserNotify', result === 'granted');
-    }
-  }, [updateReminder]);
 
   const validate = useCallback((): boolean => {
     const newErrors: FormErrors = {};
@@ -296,292 +186,22 @@ export default function EventModal() {
       maxWidth="lg"
     >
       <div className="max-h-[70vh] overflow-y-auto pr-2 -mr-2 space-y-6 scrollbar-thin">
-        {/* 区块1: 基本信息 */}
         <Section title="基本信息" icon={<Info className="w-4 h-4" />}>
-          <Input
-            label="事件名称"
-            placeholder="例如：我的生日"
-            required
-            value={form.title}
-            onChange={(e) => updateForm('title', e.target.value)}
-            error={errors.title}
-          />
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">选择图标</label>
-            <div className="grid grid-cols-10 gap-2">
-              {EMOJI_PRESETS.map((emoji) => (
-                <motion.button
-                  key={emoji}
-                  type="button"
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => updateForm('icon', emoji)}
-                  className={cn(
-                    'aspect-square flex items-center justify-center rounded-xl text-2xl transition-all duration-200',
-                    form.icon === emoji
-                      ? 'bg-gradient-primary text-white shadow-soft ring-2 ring-primary-400 ring-offset-2'
-                      : 'bg-white/70 border border-gray-200 hover:border-primary-300 hover:bg-white'
-                  )}
-                >
-                  {emoji}
-                </motion.button>
-              ))}
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">选择分类</label>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-              {CATEGORY_PRESETS.map((cat) => (
-                <motion.button
-                  key={cat.id}
-                  type="button"
-                  whileHover={{ y: -2 }}
-                  whileTap={{ scale: 0.97 }}
-                  onClick={() => {
-                    updateForm('categoryId', cat.id);
-                    if (!form.title.trim()) {
-                      updateForm('icon', cat.icon);
-                    }
-                  }}
-                  className={cn(
-                    'flex items-center gap-2.5 px-3 py-2.5 rounded-2xl transition-all duration-200 text-left',
-                    form.categoryId === cat.id
-                      ? 'shadow-soft ring-2 ring-offset-2'
-                      : 'bg-white/70 border border-gray-200 hover:border-gray-300 hover:bg-white'
-                  )}
-                  style={
-                    form.categoryId === cat.id
-                      ? {
-                          background: `linear-gradient(135deg, ${cat.gradient[0]} 0%, ${cat.gradient[1]} 100%)`,
-                          // @ts-expect-error custom css var
-                          '--tw-ring-color': cat.color,
-                        }
-                      : undefined
-                  }
-                >
-                  <div
-                    className="w-9 h-9 shrink-0 rounded-xl flex items-center justify-center text-lg shadow-sm"
-                    style={{
-                      background: `linear-gradient(135deg, ${cat.gradient[0]} 0%, ${cat.gradient[1]} 100%)`,
-                    }}
-                  >
-                    {cat.icon}
-                  </div>
-                  <span
-                    className={cn(
-                      'text-sm font-medium truncate',
-                      form.categoryId === cat.id ? 'text-white' : 'text-gray-700'
-                    )}
-                  >
-                    {cat.name}
-                  </span>
-                </motion.button>
-              ))}
-            </div>
-          </div>
+          <EventBasicFields form={form} updateForm={updateForm} errors={errors} />
         </Section>
 
-        {/* 区块2: 日期设置 */}
-        <Section title="日期设置" icon={<Calendar className="w-4 h-4" />}>
-          <DatePicker
-            dateType={form.dateType}
-            solarDate={form.solarDate}
-            lunarDate={form.lunarDate}
-            onSolarChange={handleSolarChange}
-            onLunarChange={handleLunarChange}
-            onDateTypeChange={handleDateTypeChange}
-          />
-          {errors.date && (
-            <p className="text-red-500 text-xs mt-1 flex items-center gap-1">
-              <AlertCircle className="w-3 h-3" />
-              {errors.date}
-            </p>
-          )}
+        <Section title="选择分类" icon={<Info className="w-4 h-4" />}>
+          <EventCategoryPicker form={form} updateForm={updateForm} />
         </Section>
 
-        {/* 区块3: 重复规则 */}
         <Section title="重复规则" icon={<Repeat className="w-4 h-4" />}>
-          <div className="relative flex rounded-2xl bg-white/80 p-1 border border-gray-200 overflow-x-auto">
-            <div
-              className={cn(
-                'absolute top-1 bottom-1 rounded-xl bg-gradient-primary shadow-soft transition-all duration-300',
-                getRepeatTabPosition(form.repeatType)
-              )}
-            />
-            {REPEAT_OPTIONS.map((opt) => (
-              <button
-                key={opt.value}
-                type="button"
-                onClick={() => updateForm('repeatType', opt.value)}
-                className={cn(
-                  'relative z-10 flex-1 min-w-[72px] py-2.5 px-2 rounded-xl text-xs sm:text-sm font-medium transition-colors duration-200 whitespace-nowrap',
-                  form.repeatType === opt.value
-                    ? 'text-white'
-                    : 'text-gray-600 hover:text-gray-800'
-                )}
-              >
-                {opt.label}
-              </button>
-            ))}
-          </div>
-
-          <AnimatePresence mode="wait">
-            {form.repeatType === 'custom' && (
-              <motion.div
-                key="custom"
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: 'auto' }}
-                exit={{ opacity: 0, height: 0 }}
-                transition={{ duration: 0.2 }}
-                className="overflow-hidden"
-              >
-                <Input
-                  label="重复间隔"
-                  type="number"
-                  min={1}
-                  value={form.repeatCustomInterval}
-                  onChange={(e) => updateForm('repeatCustomInterval', Math.max(1, parseInt(e.target.value) || 1))}
-                  suffix="天"
-                  helperText="每隔 N 天重复一次"
-                />
-              </motion.div>
-            )}
-          </AnimatePresence>
-
-          <AnimatePresence mode="wait">
-            {form.repeatType !== 'none' && (
-              <motion.div
-                key="endDate"
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: 'auto' }}
-                exit={{ opacity: 0, height: 0 }}
-                transition={{ duration: 0.2 }}
-                className="overflow-hidden"
-              >
-                <Input
-                  label="结束日期（可选）"
-                  type="date"
-                  value={form.repeatEndDate}
-                  onChange={(e) => updateForm('repeatEndDate', e.target.value)}
-                  helperText="留空表示永久重复"
-                />
-              </motion.div>
-            )}
-          </AnimatePresence>
+          <EventRepeatConfig form={form} updateForm={updateForm} />
         </Section>
 
-        {/* 区块4: 提醒设置 */}
         <Section title="提醒设置" icon={<Bell className="w-4 h-4" />}>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">提醒时机</label>
-            <div className="flex flex-wrap gap-2">
-              {REMINDER_DAY_OPTIONS.map((opt) => {
-                const isActive =
-                  opt.days === 0 ? form.reminder.onEventDay : form.reminder.daysBefore.includes(opt.days);
-                return (
-                  <motion.button
-                    key={opt.days}
-                    type="button"
-                    whileHover={{ scale: 1.03 }}
-                    whileTap={{ scale: 0.97 }}
-                    onClick={() => toggleReminderDay(opt.days)}
-                    className={cn(
-                      'px-4 py-2 rounded-full text-sm font-medium transition-all duration-200',
-                      isActive
-                        ? 'bg-gradient-primary text-white shadow-soft'
-                        : 'bg-white/70 text-gray-600 border border-gray-200 hover:border-primary-300'
-                    )}
-                  >
-                    {opt.label}
-                  </motion.button>
-                );
-              })}
-            </div>
-          </div>
-
-          <div className="flex flex-wrap items-end gap-2">
-            <Input
-              label="自定义天数"
-              type="number"
-              min={1}
-              value={form.customDaysInput}
-              onChange={(e) => updateForm('customDaysInput', e.target.value)}
-              placeholder="输入 N 天前提醒"
-              suffix={
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={handleCustomDaysAdd}
-                  leftIcon={<Sparkles className="w-4 h-4" />}
-                  disabled={!form.customDaysInput}
-                >
-                  添加
-                </Button>
-              }
-              className="flex-1 min-w-[200px]"
-            />
-            {form.reminder.customDays != null && !form.reminder.daysBefore.includes(form.reminder.customDays) && (
-              <span className="px-3 py-1.5 rounded-full text-xs bg-primary-50 text-primary-600 border border-primary-100">
-                自定义: 提前{form.reminder.customDays}天
-              </span>
-            )}
-            {form.reminder.daysBefore.filter((d) => !REMINDER_DAY_OPTIONS.find((o) => o.days === d)).map((d) => (
-              <span
-                key={d}
-                className="px-3 py-1.5 rounded-full text-xs bg-primary-50 text-primary-600 border border-primary-100"
-              >
-                提前{d}天
-              </span>
-            ))}
-          </div>
-
-          <div className="space-y-3 pt-1">
-            <div className="flex items-center justify-between p-3 rounded-2xl bg-white/60 border border-gray-100">
-              <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-xl bg-blue-50 flex items-center justify-center">
-                  <Globe className="w-5 h-5 text-blue-500" />
-                </div>
-                <div>
-                  <div className="text-sm font-medium text-gray-800">浏览器通知</div>
-                  {!browserNotifySupported && (
-                    <div className="text-xs text-gray-400 mt-0.5">当前浏览器不支持</div>
-                  )}
-                </div>
-              </div>
-              <Toggle
-                checked={form.reminder.browserNotify}
-                onChange={(v) => {
-                  if (v) {
-                    requestBrowserPermission();
-                  } else {
-                    updateReminder('browserNotify', false);
-                  }
-                }}
-                disabled={!browserNotifySupported}
-              />
-            </div>
-
-            <div className="flex items-center justify-between p-3 rounded-2xl bg-white/60 border border-gray-100">
-              <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-xl bg-orange-50 flex items-center justify-center">
-                  <MessageSquare className="w-5 h-5 text-orange-500" />
-                </div>
-                <div>
-                  <div className="text-sm font-medium text-gray-800">弹窗通知</div>
-                  <div className="text-xs text-gray-400 mt-0.5">应用内弹出提醒</div>
-                </div>
-              </div>
-              <Toggle
-                checked={form.reminder.popupNotify}
-                onChange={(v) => updateReminder('popupNotify', v)}
-              />
-            </div>
-          </div>
+          <EventReminderConfig form={form} updateForm={updateForm} />
         </Section>
 
-        {/* 区块5: 其他设置 */}
         <Section title="其他设置" icon={<Settings className="w-4 h-4" />}>
           <div className="flex items-center justify-between p-3 rounded-2xl bg-white/60 border border-gray-100">
             <div className="flex items-center gap-3">
@@ -601,7 +221,6 @@ export default function EventModal() {
         </Section>
       </div>
 
-      {/* 底部操作栏 */}
       <div className="mt-6 pt-4 border-t border-gray-100/80 flex items-center justify-between gap-3">
         <div>
           {isEditing && (
@@ -653,12 +272,4 @@ function Section({
       <div className="space-y-4">{children}</div>
     </motion.div>
   );
-}
-
-function getRepeatTabPosition(value: RepeatType): React.CSSProperties {
-  const idx = REPEAT_OPTIONS.findIndex((o) => o.value === value);
-  const pct = (100 / REPEAT_OPTIONS.length).toFixed(2);
-  const left = `calc(${idx * parseFloat(pct)}% + 4px)`;
-  const width = `calc(${pct}% - 8px)`;
-  return { left, width };
 }

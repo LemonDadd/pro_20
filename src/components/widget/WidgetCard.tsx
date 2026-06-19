@@ -4,8 +4,9 @@ import { useEventsStore } from '@/store/eventsStore';
 import { useUIStore } from '@/store/uiStore';
 import { getCategoryById } from '@/utils/categoryPresets';
 import { formatDateDisplay } from '@/utils/dateCalculator';
+import { computeEventStatus } from '@/utils/eventStatus';
 import { cn } from '@/lib/utils';
-import type { CountdownEventWithMetrics } from '../events/EventCard';
+import type { CountdownEventWithMetrics } from '@/components/events/EventCard';
 
 interface WidgetCardProps {
   event: CountdownEventWithMetrics;
@@ -16,16 +17,16 @@ export default function WidgetCard({ event }: WidgetCardProps) {
   const { openEditModal, openShareModal } = useUIStore();
   const category = getCategoryById(event.categoryId);
 
-  const isToday = event.daysRemaining === 0;
-  const isFuture = event.daysRemaining > 0;
-  const isPast = event.isPast || event.daysRemaining < 0;
-
-  const statusLabel = isToday ? '今天' : isFuture ? '还剩' : '已过';
-  const displayDays = Math.abs(event.daysRemaining);
-
-  const years = Math.floor(displayDays / 365);
-  const remainingDays = displayDays % 365;
-  const showYears = displayDays > 365;
+  const {
+    isToday,
+    isFuture,
+    isPast,
+    statusLabel,
+    displayDays,
+    years,
+    remainingDays,
+    showYears,
+  } = computeEventStatus(event.daysRemaining, event.isPast);
 
   const hasRepeat = event.repeatType !== 'none';
   const hasReminder = event.reminder.onEventDay || event.reminder.daysBefore.length > 0;
